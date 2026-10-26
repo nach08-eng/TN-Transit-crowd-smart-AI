@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import datetime, timezone
 import os, json, uuid
+import hmac
 
 BASE = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE / 'uploads'
@@ -15,6 +16,25 @@ ALLOWED = {'.mp4', '.avi', '.mov', '.mkv', '.webm', '.jpg', '.jpeg', '.png'}
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = str(UPLOAD_DIR)
+DEPLOYMENT_AUTH_REQUIRED = os.environ.get('DEPLOYMENT_AUTH_REQUIRED') == 'true'
+AUTH_USERNAME = os.environ.get('APP_USERNAME', '')
+AUTH_PASSWORD = os.environ.get('APP_PASSWORD', '')
+
+if DEPLOYMENT_AUTH_REQUIRED and not (AUTH_USERNAME and AUTH_PASSWORD):
+    raise RuntimeError('APP_USERNAME and APP_PASSWORD are required when deployment authentication is enabled.')
+
+@app.before_request
+def require_deployment_auth():
+    if not DEPLOYMENT_AUTH_REQUIRED or request.endpoint == 'health':
+        return None
+    credentials = request.authorization
+    username = credentials.username if credentials else ''
+    password = credentials.password if credentials else ''
+    if not (hmac.compare_digest(username, AUTH_USERNAME) and hmac.compare_digest(password, AUTH_PASSWORD)):
+        return jsonify(ok=False, error='Authentication required.'), 401, {
+            'WWW-Authenticate': 'Basic realm="TN Transit Dashboard"'
+        }
+    return None
 
 DEFAULT_CONFIG = {
     'max_passengers': 40,

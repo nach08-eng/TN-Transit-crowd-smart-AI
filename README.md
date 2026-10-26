@@ -25,6 +25,15 @@ python app.py
 
 5. Open `http://127.0.0.1:5000` in your browser.
 
+## Deploy a free demo on Render
+
+1. Sign in to [Render](https://dashboard.render.com/) and choose **New > Blueprint**.
+2. Connect `nach08-eng/TN-Transit-crowd-smart-AI` and select the `main` branch. Render detects the root-level `render.yaml`.
+3. When prompted, set `APP_USERNAME` and `APP_PASSWORD` to credentials for the demo dashboard, then create the service.
+4. Wait for the deploy to finish and open the `onrender.com` URL shown by Render. Sign in with the credentials you set.
+
+The Blueprint uses Render's free web-service plan. Free services can sleep when idle, and their filesystem is temporary: settings, event history, and uploaded media may be lost after a restart, sleep, or redeploy. Use this only as a demo, not for operational or passenger-safety use. The deployed dashboard requires HTTP Basic Authentication; `/health` remains public for the hosting health check. Use a paid hosting plan with persistent storage and an appropriate data store before relying on saved data.
+
 ## What is implemented
 
 - Responsive dashboard UI.
